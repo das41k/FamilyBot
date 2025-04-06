@@ -196,3 +196,73 @@ class Part_Andrey:
             print(f"[ERROR] Ошибка при добавлении постоянной операции: {e}")
             connection.rollback()
             raise
+
+    @staticmethod
+    def get_family_info(family_id: int) -> dict:
+        """Получает информацию о семье по её ID"""
+        try:
+            # Получаем основную информацию о семье
+            Part_Andrey.cursor.execute(
+                """SELECT family_name
+                   FROM families 
+                   WHERE family_id = %s""",
+                (family_id,)
+            )
+            family_data = Part_Andrey.cursor.fetchone()
+
+            if not family_data:
+                return None
+
+            # Получаем количество участников
+            Part_Andrey.cursor.execute(
+                """SELECT COUNT(*) 
+                   FROM clients 
+                   WHERE family_id = %s""",
+                (family_id,)
+            )
+            member_count = Part_Andrey.cursor.fetchone()[0]
+
+            return {
+                'family_name': family_data[0],
+                'member_count': member_count
+            }
+
+        except Exception as e:
+            print(f"Ошибка при получении информации о семье: {e}")
+            return None
+
+    @staticmethod
+    def leave_family(username: str) -> bool:
+        """Удаляет пользователя из семьи"""
+        try:
+            Part_Andrey.cursor.execute(
+                """UPDATE clients 
+                   SET family_id = NULL 
+                   WHERE tg_nick = %s""",
+                (username,)
+            )
+            connection.commit()
+            return True
+
+        except Exception as e:
+            print(f"Ошибка при выходе из семьи: {e}")
+            connection.rollback()
+            return False
+
+    @staticmethod
+    def get_family_members(family_id: int) -> list:
+        """Получает список участников семьи"""
+        try:
+            Part_Andrey.cursor.execute(
+                """SELECT tg_nick 
+                   FROM clients 
+                   WHERE family_id = %s""",
+                (family_id,)
+            )
+            return [row[0] for row in Part_Andrey.cursor.fetchall()]
+
+        except Exception as e:
+            print(f"Ошибка при получении участников семьи: {e}")
+            return []
+
+

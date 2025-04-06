@@ -72,3 +72,27 @@ class DatabaseManager:
             return category_id
         except Exception as _ex:
             print("[ERROR] Ошибка при добавлении категории:", _ex)
+
+    @staticmethod
+    def get_family_members_count(family_id: int) -> int:
+        """Получает количество участников семьи"""
+        try:
+            query = "SELECT COUNT(*) FROM clients WHERE family_id = %s"
+            DatabaseManager.cursor.execute(query, (family_id,))
+            return DatabaseManager.cursor.fetchone()[0]
+        except Exception as _ex:
+            print("[ERROR] Ошибка при получении количества участников семьи:", _ex)
+            return 0
+
+    @staticmethod
+    def remove_user_from_family(username: str) -> bool:
+        """Удаляет пользователя из семьи (устанавливает family_id = NULL)"""
+        try:
+            query = "UPDATE clients SET family_id = NULL WHERE tg_nick = %s"
+            DatabaseManager.cursor.execute(query, (username,))
+            connection.commit()
+            return True
+        except Exception as _ex:
+            print("[ERROR] Ошибка при выходе из семьи:", _ex)
+            connection.rollback()
+            return False
