@@ -235,13 +235,35 @@ class Part_Andrey:
     def leave_family(username: str) -> bool:
         """Удаляет пользователя из семьи"""
         try:
-            Part_Andrey.cursor.execute(
-                """UPDATE clients 
-                   SET family_id = NULL 
-                   WHERE tg_nick = %s""",
-                (username,)
-            )
+            # Сначала получаем family_id пользователя
+            query = "SELECT family_id FROM clients WHERE tg_nick = %s"
+            Part_Andrey.cursor.execute(query, (username,))
+            result = Part_Andrey.cursor.fetchone()
+
+            if not result or not result[0]:
+                return False  # Пользователь не в семье
+
+            family_id = result[0]
+
+            query = "UPDATE clients SET family_id = NULL WHERE tg_nick = %s"
+            Part_Andrey.cursor.execute(query, (username,))
             connection.commit()
+
+            # Проверяем, остались ли другие участники в семье
+            query = "SELECT COUNT(*) FROM clients WHERE family_id = %s"
+            Part_Andrey.cursor.execute(query, (family_id,))
+            count = Part_Andrey.cursor.fetchone()[0]
+            print(f"Остаток - {count}")  # Исправлено: использование f-строки
+
+            connection.commit()
+
+            if count == 0:
+                # Если участников не осталось - удаляем семью
+                query = "DELETE FROM families WHERE family_id = %s"
+                Part_Andrey.cursor.execute(query, (family_id,))
+                print(f"Семья {family_id} удалена, так как не осталось участников")
+                connection.commit()
+
             return True
 
         except Exception as e:
@@ -265,4 +287,14 @@ class Part_Andrey:
             print(f"Ошибка при получении участников семьи: {e}")
             return []
 
+    @staticmethod
+    def check_join_code_available(join_code: str) -> bool:
+        """Проверяет, свободен ли код для использования"""
+        try:
+            query = "SELECT COUNT(*) FROM families WHERE join_code = %s"
+            Part_Andrey.cursor.execute(query, (join_code,))
+            return Part_Andrey.cursor.fetchone()[0] == 0
+        except Exception as e:
+            print(f"Ошибка при проверке кода: {e}")
+            return False
 
