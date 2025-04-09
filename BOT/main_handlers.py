@@ -34,6 +34,7 @@ def register_main_handlers(bot):
     def handle_statistics_menu(message):
         bot.send_message(
             message.chat.id,
-            "📊Вывод статистики",
-            reply_markup=create_statistics_types_keyboard()
+            "📊 <b>Выберите тип статистики:</b>",
+            reply_markup=create_statistics_types_keyboard(),
+            parse_mode='HTML'
         )

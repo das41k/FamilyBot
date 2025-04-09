@@ -46,10 +46,12 @@ def create_statistics_types_keyboard():
     """Клавиатура выбора типа статистики (inline)"""
     keyboard = types.InlineKeyboardMarkup(row_width=1)
     buttons = [
-        types.InlineKeyboardButton("📊 Общая статистика семьи", callback_data='stat_family_overview'),
-        types.InlineKeyboardButton("📈 Динамика доходов/расходов", callback_data='stat_dynamics'),
-        types.InlineKeyboardButton("🔄 Расходы по категориям", callback_data='stat_categories'),
-        types.InlineKeyboardButton("👤 Личная статистика", callback_data='stat_personal')
+        types.InlineKeyboardButton("📊 Общая статистика по расходам и доходам семьи и ее участников",
+                                   callback_data='stat_family_overview'),
+        types.InlineKeyboardButton("📈 Динамика доходов/расходов семьи", callback_data='stat_family_dynamics'),
+        types.InlineKeyboardButton("📉 Динамика личных доходов/расходов", callback_data='stat_user_dynamics'),
+        types.InlineKeyboardButton("🔄 Расходы семьи по категориям", callback_data='stat_family_categories'),
+        types.InlineKeyboardButton("🔄 Личные расходы по категориям", callback_data='stat_user_categories'),
     ]
     keyboard.add(*buttons)
     return keyboard
@@ -69,5 +71,5 @@ def create_statistics_period_keyboard(stat_type):
 def create_confirm_keyboard():
     """Клавиатура подтверждения"""
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    keyboard.row("✅ Да", "❌ Нет")
+    keyboard.row("Да", "Нет")
     return keyboard

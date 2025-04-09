@@ -100,7 +100,7 @@ def register_family_handlers(bot):
         chat_id = message.chat.id
         username = message.from_user.username
 
-        if message.text.lower() == "да":
+        if message.text == "Да":
             success = family_service.leave_family(username)
             if success:
                 bot.send_message(chat_id, "✅ Вы успешно вышли из семьи.",
@@ -108,9 +108,15 @@ def register_family_handlers(bot):
             else:
                 bot.send_message(chat_id, "❌ Не удалось выйти из семьи.",
                                  reply_markup=create_family_keyboard(username))
-        else:
+        elif message.text == "Нет":
             bot.send_message(chat_id, "Отмена выхода из семьи.",
                              reply_markup=create_family_keyboard(username))
+        else:
+            # Если получен неожиданный ответ, снова запрашиваем подтверждение
+            bot.send_message(chat_id,
+                             "Пожалуйста, выберите 'Да' или 'Нет'.",
+                             reply_markup=create_confirm_keyboard())
+            bot.register_next_step_handler(message, process_leave_confirmation)
 
     @bot.message_handler(func=lambda msg: msg.text == "👪 Моя семья")
     def handle_family_info(message):

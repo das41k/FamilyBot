@@ -4,5 +4,5 @@ from telebot import types
 from ServiceAndrey import Part_Andrey
 
 def create_bot():
-    bot = telebot.TeleBot('7594766898:AAGCf-erF5yZCHicKVydjky_kOoFDODOfAQ')
+    bot = telebot.TeleBot('7282994591:AAGRTZs8D8j6gw4ex4-1Pvh5vmvMiCxg2ZM')
     return bot
