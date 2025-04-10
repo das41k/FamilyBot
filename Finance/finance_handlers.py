@@ -104,6 +104,7 @@ def register_finance_handlers(bot):
         bot.register_next_step_handler(msg, process_income_amount_step)
 
     def process_income_amount_step(message):
+
         chat_id = message.chat.id
         try:
             amount = float(message.text)

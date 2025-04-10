@@ -125,9 +125,16 @@ class family_service:
 
     @staticmethod
     def leave_family(username: str) -> bool:
-        """Удаляет пользователя из семьи"""
+        """Удаляет пользователя из семьи, включая все связанные данные
+
+        Args:
+            username: Имя пользователя в Telegram
+
+        Returns:
+            bool: True если операция успешна, False если пользователь не в семье или произошла ошибка
+        """
         try:
-            # Сначала получаем family_id пользователя
+            # Получаем family_id пользователя
             query = "SELECT family_id FROM clients WHERE tg_nick = %s"
             family_service.cursor.execute(query, (username,))
             result = family_service.cursor.fetchone()
@@ -137,22 +144,38 @@ class family_service:
 
             family_id = result[0]
 
+            # Удаляем пользователя из семьи
             query = "UPDATE clients SET family_id = NULL WHERE tg_nick = %s"
             family_service.cursor.execute(query, (username,))
             connection.commit()
 
-            # Проверяем, остались ли другие участники в семье
+            # Проверяем, остались ли участники в семье
             query = "SELECT COUNT(*) FROM clients WHERE family_id = %s"
             family_service.cursor.execute(query, (family_id,))
             count = family_service.cursor.fetchone()[0]
-            print(f"Остаток - {count}")  # Исправлено: использование f-строки
-
-            connection.commit()
+            print(f"Осталось участников в семье: {count}")
 
             if count == 0:
-                # Если участников не осталось - удаляем семью
-                query = "DELETE FROM families WHERE family_id = %s"
-                family_service.cursor.execute(query, (family_id,))
+                # Удаляем связанные записи из ВСЕХ зависимых таблиц
+                tables_to_clear = [
+                    "operations",
+                    "recurringoperations"
+                    # Добавьте сюда другие таблицы при необходимости
+                ]
+
+                for table in tables_to_clear:
+                    try:
+                        delete_query = f"DELETE FROM {table} WHERE family_id = %s"
+                        family_service.cursor.execute(delete_query, (family_id,))
+                        print(f"Удалены записи из {table} для семьи {family_id}")
+                    except Exception as e:
+                        print(f"Ошибка при очистке {table}: {e}")
+                        connection.rollback()
+                        return False
+
+                # Удаляем саму семью
+                delete_family_query = "DELETE FROM families WHERE family_id = %s"
+                family_service.cursor.execute(delete_family_query, (family_id,))
                 print(f"Семья {family_id} удалена, так как не осталось участников")
                 connection.commit()
 
@@ -160,9 +183,9 @@ class family_service:
 
         except Exception as e:
             print(f"Ошибка при выходе из семьи: {e}")
-            connection.rollback()
+            if 'connection' in globals():
+                connection.rollback()
             return False
-
     @staticmethod
     def get_family_members(family_id: int) -> list:
         """Получает список участников семьи"""
