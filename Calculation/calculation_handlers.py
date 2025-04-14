@@ -9,12 +9,14 @@ from BOT.keyboards import *
 user_data = {}
 
 def create_calculator_keyboard():
+    '''
+    "Вклад",
+    "Накопления",
+    "Бюджет",
+    '''
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     buttons = [
         "Кредит",
-        "Вклад",
-        "Накопления",
-        "Бюджет",
         "↩️ Назад"  # Для возврата в главное меню
     ]
     keyboard.add(*buttons)

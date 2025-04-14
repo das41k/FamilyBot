@@ -202,6 +202,7 @@ class family_service:
             print(f"Ошибка при получении участников семьи: {e}")
             return []
 
+
     @staticmethod
     def check_join_code_available(join_code: str) -> bool:
         """Проверяет, свободен ли код для использования"""
@@ -212,3 +213,28 @@ class family_service:
         except Exception as e:
             print(f"Ошибка при проверке кода: {e}")
             return False
+
+    @staticmethod
+    def get_join_code(family_id: int) -> str:
+        """Получает код присоединения семьи и преобразует из bytea в строку"""
+        try:
+            family_service.cursor.execute("SELECT join_code FROM families WHERE family_id = %s",
+                                          (family_id,))
+            result = family_service.cursor.fetchone()
+            if not result:
+                return None
+            # Преобразуем bytea в строку
+            bytea_data = result[0]
+            if isinstance(bytea_data, memoryview):
+                bytea_data = bytes(bytea_data)
+            if isinstance(bytea_data, bytes):
+                try:  # Пытаемся декодировать как UTF-8 (если данные были строкой)
+                    return bytea_data.decode('utf-8')
+                except UnicodeDecodeError:
+                    # Если не UTF-8, возвращаем hex представление
+                    return bytea_data.hex()
+            else:  # Если данные не bytes, возвращаем как есть
+                return str(bytea_data)
+        except Exception as e:
+            print(f"Ошибка при получении кода присоединения: {e}")
+        return None

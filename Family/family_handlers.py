@@ -149,8 +149,11 @@ def register_family_handlers(bot):
         family_info = family_service.get_family_info(family_id)
         if family_info:
             members = "\n".join([f"• @{user}" for user in family_service.get_family_members(family_id)])
+            # Получаем код присоединения
+            join_code = family_service.get_join_code(family_id)
             bot.send_message(chat_id,
                              f"👪 Семья: {family_info['family_name']}\n"
+                             f"🔑 Код присоединения: {join_code}\n"
                              f"👤 Участников: {family_info['member_count']}\n"
                              f"🔸 Участники:\n{members}")
         else:
