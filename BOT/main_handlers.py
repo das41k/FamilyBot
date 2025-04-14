@@ -1,6 +1,7 @@
 # handlers/main_handlers.py
 from ServiceAndrey import Part_Andrey
 from keyboards import *
+from Calculation.calculation_handlers import create_calculator_keyboard
 
 def register_main_handlers(bot):
     @bot.message_handler(commands=['start'])
@@ -37,4 +38,12 @@ def register_main_handlers(bot):
             "📊 <b>Выберите тип статистики:</b>",
             reply_markup=create_statistics_types_keyboard(),
             parse_mode='HTML'
+        )
+
+    @bot.message_handler(func=lambda m: m.text == "🧮 Калькулятор финансов")
+    def show_calculator_menu(message):
+        bot.send_message(
+            message.chat.id,
+            "📊 Выберите тип расчета:",
+            reply_markup=create_calculator_keyboard()
         )

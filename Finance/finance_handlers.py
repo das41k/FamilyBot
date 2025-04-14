@@ -385,6 +385,15 @@ def register_finance_handlers(bot):
             bot.send_message(chat_id, f"Ошибка: {str(e)}",
                              reply_markup=create_back_keyboard())
 
+    '''
+    (эта штука перекрывает кнопки 
+        "Кредит",
+        "Вклад",
+        "Накопления",
+        "Бюджет",
+        "Назад" 
+        Надо исправить как-то)
+
     @bot.message_handler(func=lambda m: True)
     def fallback_handler(message):
         bot.send_message(
@@ -392,3 +401,4 @@ def register_finance_handlers(bot):
             "Пожалуйста, используйте кнопки меню.",
             reply_markup=create_main_keyboard()
         )
+    '''

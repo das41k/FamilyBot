@@ -6,7 +6,7 @@ def create_main_keyboard():
     """Главное меню"""
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.row("👨👩👧👦 Семья", "💰 Учет финансов")
-    keyboard.row("📊 Статистика")
+    keyboard.row("📊 Статистика", "🧮 Калькулятор финансов")
     return keyboard
 
 def create_family_keyboard(username):
