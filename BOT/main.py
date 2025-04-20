@@ -5,6 +5,7 @@ from Finance.finance_handlers import *
 from Statistics.statistics_handlers import *
 from main_handlers import register_main_handlers
 from Calculation.calculation_handlers import *
+from Info.info_handlers import *
 
 def run_bot():
     bot = create_bot()
@@ -14,6 +15,8 @@ def run_bot():
     register_statistics_handlers(bot)
     register_finance_handlers(bot)
     register_calculation_handlers(bot)
+    register_finance_handlers(bot)
+    register_info_handlers(bot)
     print("Бот запущен...")
     bot.infinity_polling()
 

@@ -1,5 +1,5 @@
 host = "127.0.0.1"
 user = "postgres"
-password = "root"
+password = "admin"
 db_name = "FamilyBot"
 # порт стандартный

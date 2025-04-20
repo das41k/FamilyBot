@@ -47,3 +47,12 @@ def register_main_handlers(bot):
             "📊 Выберите тип расчета:",
             reply_markup=create_calculator_keyboard()
         )
+
+    @bot.message_handler(func=lambda msg: msg.text == "ℹ️ Информация")
+    def handle_statistics_menu(message):
+        bot.send_message(
+            message.chat.id,
+            "ℹ️ <b>Информация</b>\nВыберите интересующий пункт:",
+            reply_markup=create_info_keyboard(),
+            parse_mode='HTML'
+        )

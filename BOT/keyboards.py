@@ -7,6 +7,7 @@ def create_main_keyboard():
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.row("👨👩👧👦 Семья", "💰 Учет финансов")
     keyboard.row("📊 Статистика", "🧮 Калькулятор финансов")
+    keyboard.row("ℹ️ Информация")
     return keyboard
 
 def create_family_keyboard(username):
@@ -72,4 +73,14 @@ def create_confirm_keyboard():
     """Клавиатура подтверждения"""
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.row("Да", "Нет")
+    return keyboard
+def create_info_keyboard():
+    """Клавиатура для раздела информации (inline)"""
+    keyboard = types.InlineKeyboardMarkup(row_width=1)
+    buttons = [
+        types.InlineKeyboardButton("📌 О боте", callback_data='info_about_bot'),
+        types.InlineKeyboardButton("📖 Справка", callback_data='info_help'),
+        types.InlineKeyboardButton("🛠 Поддержка", callback_data='info_support'),
+    ]
+    keyboard.add(*buttons)
     return keyboard
