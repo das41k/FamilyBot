@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('agg')  # Используем backend, который не требует GUI
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import rc
@@ -21,7 +24,7 @@ class StatService:
                 total_query = """
                            SELECT COALESCE(SUM(amount), 0)
                            FROM Operations
-                           WHERE client_id = %s 
+                           WHERE client_id = %s
                            AND operation_type_id = 2  -- Только расходы
                            AND operation_date BETWEEN %s AND %s;
                        """
@@ -30,14 +33,14 @@ class StatService:
 
                 # Получаем данные по категориям (только РАСХОДЫ)
                 stat_query = """
-                           SELECT 
-                               c.category_id, 
-                               c.category_name, 
+                           SELECT
+                               c.category_id,
+                               c.category_name,
                                COALESCE(SUM(o.amount), 0) as amount,
                                (COALESCE(SUM(o.amount), 0) * 100.0 / %s) as percentage
                            FROM Categories c
-                           JOIN Operations o ON c.category_id = o.category_id 
-                               AND o.client_id = %s 
+                           JOIN Operations o ON c.category_id = o.category_id
+                               AND o.client_id = %s
                                AND o.operation_type_id = 2  -- Только расходы
                                AND o.operation_date BETWEEN %s AND %s
                            GROUP BY c.category_id, c.category_name
@@ -182,7 +185,7 @@ class StatService:
                 total_query = """
                             SELECT COALESCE(SUM(amount), 0)
                             FROM Operations
-                            WHERE family_id = %s 
+                            WHERE family_id = %s
                             AND operation_type_id = 2  -- Только расходы
                             AND operation_date BETWEEN %s AND %s;
                         """
@@ -191,14 +194,14 @@ class StatService:
 
                 # Получаем данные по категориям (только РАСХОДЫ)
                 stat_query = """
-                            SELECT 
-                                c.category_id, 
-                                c.category_name, 
+                            SELECT
+                                c.category_id,
+                                c.category_name,
                                 COALESCE(SUM(o.amount), 0) as amount,
                                 (COALESCE(SUM(o.amount), 0) * 100.0 / %s) as percentage
                             FROM Categories c
-                            JOIN Operations o ON c.category_id = o.category_id 
-                                AND o.family_id = %s 
+                            JOIN Operations o ON c.category_id = o.category_id
+                                AND o.family_id = %s
                                 AND o.operation_type_id = 2  -- Только расходы
                                 AND o.operation_date BETWEEN %s AND %s
                             GROUP BY c.category_id, c.category_name
@@ -232,12 +235,12 @@ class StatService:
             with StatService._connection.cursor() as cursor:
                 # Запрос для получения доходов и расходов по дням
                 query = """
-                       SELECT 
+                       SELECT
                            operation_date as date,
                            SUM(CASE WHEN operation_type_id = 1 THEN amount ELSE 0 END) as income,
                            SUM(CASE WHEN operation_type_id = 2 THEN amount ELSE 0 END) as expense
                        FROM operations
-                       WHERE client_id = %s 
+                       WHERE client_id = %s
                        AND operation_date BETWEEN %s AND %s
                        GROUP BY operation_date
                        ORDER BY operation_date;
@@ -284,12 +287,12 @@ class StatService:
             with StatService._connection.cursor() as cursor:
                 # Запрос для получения доходов и расходов по дням
                 query = """
-                        SELECT 
+                        SELECT
                             operation_date as date,
                             SUM(CASE WHEN operation_type_id = 1 THEN amount ELSE 0 END) as income,
                             SUM(CASE WHEN operation_type_id = 2 THEN amount ELSE 0 END) as expense
                         FROM operations
-                        WHERE family_id = %s 
+                        WHERE family_id = %s
                         AND operation_date BETWEEN %s AND %s
                         GROUP BY operation_date
                         ORDER BY operation_date;
@@ -315,6 +318,7 @@ class StatService:
         except Exception as e:
             print(f"Ошибка при получении данных по дням: {e}")
             return {'dates': [], 'income': [], 'expenses': []}
+
     @staticmethod
     def _create_income_expense_time_series(data: dict, title_prefix: str, period_info: str = None):
         """Создание графика доходов и расходов по времени"""
@@ -342,7 +346,16 @@ class StatService:
         expenses = data.get('expenses', [0] * len(dates))
 
         # Преобразуем даты в datetime для правильного отображения
-        date_objects = [datetime.strptime(date, '%Y-%m-%d') for date in dates]
+        date_objects = [datetime.datetime.strptime(date, '%Y-%m-%d') for date in dates]
+
+        # Определяем минимальную и максимальную даты из данных
+        min_date = min(date_objects)
+        max_date = max(date_objects)
+
+        # Добавляем небольшой отступ справа (например, 5% от диапазона дат)
+        date_range = max_date - min_date
+        padding = date_range * 0.05
+        xlim_max = max_date + padding
 
         # Построение графиков
         if any(income):
@@ -360,6 +373,9 @@ class StatService:
                     linewidth=2.5,
                     marker='o',
                     markersize=6)
+
+        # Устанавливаем пределы оси X
+        ax.set_xlim(min_date - padding, xlim_max)
 
         # Настройка осей и сетки
         ax.grid(True, linestyle='--', alpha=0.3)
@@ -394,6 +410,7 @@ class StatService:
         plt.close(fig)
 
         return temp_file
+
     @staticmethod
     def get_client_for_family(family_id):
         with StatService._connection.cursor() as cursor:
@@ -443,7 +460,6 @@ class StatService:
             cursor.execute(query, (client_id,))
             result = cursor.fetchone()
             return result[0] if result[0] is not None else 0
-
 
     @staticmethod
     def get_stat_family_operation(family_id: int):
@@ -646,13 +662,14 @@ class StatService:
             title_prefix='Семейные финансы',
             period_info=f'{start_date} - {end_date}'
         )
+
     @staticmethod
     def get_client_info_by_tg_nick(tg_nick: str):
         """Получить всю информацию о клиенте по Telegram username"""
         try:
             with StatService._connection.cursor() as cursor:
                 query = """
-                           SELECT client_id, family_id 
+                           SELECT client_id, family_id
                            FROM clients
                            WHERE tg_nick = %s;
                        """

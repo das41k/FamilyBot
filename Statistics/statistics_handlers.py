@@ -1,11 +1,9 @@
 import datetime
 import os
-
 from BOT.keyboards import *
 from Statistics.statistics_service import *
 
 user_data = {}
-
 
 def register_statistics_handlers(bot):
     @bot.message_handler(func=lambda msg: msg.text == "↩️ Назад")
@@ -68,8 +66,8 @@ def register_statistics_handlers(bot):
     def show_date_range_keyboard(chat_id, stat_type, client_info):
         keyboard = types.InlineKeyboardMarkup(row_width=2)
         buttons = [
-            types.InlineKeyboardButton("Неделя", callback_data=f'date_range|{stat_type}|week'),
             types.InlineKeyboardButton("Месяц", callback_data=f'date_range|{stat_type}|month'),
+            types.InlineKeyboardButton("Полгода", callback_data=f'date_range|{stat_type}|half_year'),
             types.InlineKeyboardButton("Год", callback_data=f'date_range|{stat_type}|year'),
             types.InlineKeyboardButton("Свой вариант", callback_data=f'date_range|{stat_type}|custom'),
         ]
@@ -97,10 +95,10 @@ def register_statistics_handlers(bot):
                 bot.register_next_step_handler(msg, process_statistics_period)
             else:
                 end_date = datetime.date.today()
-                if range_type == 'week':
-                    start_date = end_date - datetime.timedelta(days=7)
-                elif range_type == 'month':
+                if range_type == 'month':
                     start_date = end_date - datetime.timedelta(days=30)
+                elif range_type == 'half_year':
+                    start_date = end_date - datetime.timedelta(days=180)
                 elif range_type == 'year':
                     start_date = end_date - datetime.timedelta(days=365)
 
