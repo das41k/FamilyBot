@@ -1,6 +1,6 @@
 import math
 from typing import Union, Dict, List, Optional
-
+from datetime import datetime, timedelta
 
 class FinanceCalculator:
     """
@@ -69,84 +69,124 @@ class FinanceCalculator:
 
     # ----------------- Калькулятор вкладов -----------------
     @staticmethod
+    def _calculate_deposit_interest(
+            amount: float,
+            annual_rate: float,
+            months: int,
+            deposit_type: str = "capitalization"
+    ) -> tuple[float, float, list[dict]]:
+        """
+        Общая логика для расчёта вклада. Возвращает:
+        - итоговую сумму
+        - общие проценты
+        - график платежей
+        """
+        monthly_rate = annual_rate / 12 / 100
+        schedule = []
+        total = amount
+        total_interest = 0.0
+
+        for month in range(1, months + 1):
+            if deposit_type == "capitalization":
+                interest = total * monthly_rate
+                total += interest
+            else:
+                interest = amount * monthly_rate
+
+            total_interest += interest
+            schedule.append({
+                "month": month,
+                "interest": round(interest, 2),
+                "end_amount": round(total, 2) if deposit_type == "capitalization" else round(amount + total_interest, 2)
+            })
+
+        return round(total, 2), round(total_interest, 2), schedule
+
+    @staticmethod
     def calculate_deposit(
             amount: float,
             annual_rate: float,
             months: int,
-            capitalization: bool = True
-    ) -> Dict[str, float]:
+            deposit_type: str = "capitalization"
+    ) -> dict:
         """
-        Расчет доходности вклада.
+        Возвращает только итоговые значения для вклада.
+        Используется, когда график платежей не нужен.
+        """
+        total, interest, _ = FinanceCalculator._calculate_deposit_interest(
+            amount, annual_rate, months, deposit_type
+        )
+        if deposit_type != "capitalization":
+            total = amount + interest
+        return {
+            "total": total,
+            "interest": interest,
+            "type": deposit_type
+        }
 
-        :param amount: Сумма вклада
-        :param annual_rate: Годовая ставка (%)
-        :param months: Срок в месяцах
-        :param capitalization: Капитализация процентов
-        :return: Словарь с результатами
+    @staticmethod
+    def generate_deposit_schedule(
+            amount: float,
+            annual_rate: float,
+            months: int,
+            deposit_type: str = "capitalization"
+    ) -> list[dict]:
         """
-        if capitalization:
-            # Заглушка для вклада с капитализацией
-            return {
-                "final_amount": round(amount * (1 + annual_rate / 100) ** (months / 12), 2),
-                "interest": "расчет с капитализацией"
-            }
-        else:
-            # Простой процент
-            return {
-                "final_amount": round(amount * (1 + annual_rate / 100 * months / 12), 2),
-                "interest": "простой процент"
-            }
+        Генерирует подробный график платежей по вкладу.
+        Используется для отображения помесячной статистики.
+        """
+        _, _, schedule = FinanceCalculator._calculate_deposit_interest(
+            amount, annual_rate, months, deposit_type
+        )
+        return schedule
 
     # ----------------- Накопительный калькулятор -----------------
     @staticmethod
-    def calculate_savings(
+    def calculate_savings_comparison(
             initial: float,
             monthly_add: float,
             annual_rate: float,
-            months: int
-    ) -> Dict[str, float]:
-        """
-        Расчет накоплений с регулярными пополнениями.
+            months: int,
+    ) -> Dict:
+        """Возвращает результаты для обоих типов начисления"""
 
-        :param initial: Начальная сумма
-        :param monthly_add: Ежемесячное пополнение
-        :param annual_rate: Годовая процентная ставка
-        :param months: Срок в месяцах
-        :return: Словарь с результатами
-        """
-        # Упрощенный расчет (будем дорабатывать)
-        total_added = monthly_add * months
-        total = initial + total_added
-        return {
-            "total_amount": round(total, 2),
-            "total_added": round(total_added, 2),
-            "interest": "расчет будет уточнен"
-        }
+        def calculate(capitalization: bool):
+            monthly_rate = annual_rate / 12 / 100
+            total = initial
+            total_interest = 0
+            total_added = initial
+            schedule = []
 
-    # ----------------- Бюджетный калькулятор -----------------
-    @staticmethod
-    def calculate_budget(
-            income: float,
-            expenses: float,
-            goal: float,
-            months: int
-    ) -> Dict[str, float]:
-        """
-        Расчет бюджета для достижения финансовой цели.
+            for month in range(1, months + 1):
 
-        :param income: Ежемесячный доход
-        :param expenses: Обязательные расходы
-        :param goal: Целевая сумма
-        :param months: Срок в месяцах
-        :return: Словарь с рекомендациями
-        """
-        available = income - expenses
-        monthly_saving = goal / months
+                if capitalization:
+                    interest = total * monthly_rate
+                else:
+                    interest = total_added * monthly_rate
+
+                total_interest += interest
+                if capitalization:
+                    total += interest
+
+                total += monthly_add
+                total_added += monthly_add
+
+                schedule.append({
+                    'month': month,
+                    'added': monthly_add,
+                    'interest': round(interest, 2),
+                    'total': round(total, 2)
+                })
+
+            return {
+                "total": round(total, 2),
+                "total_interest": round(total_interest, 2),
+                'schedule': schedule
+            }
 
         return {
-            "monthly_saving": round(monthly_saving, 2),
-            "possible": monthly_saving <= available,
-            "daily_budget": round((available - monthly_saving) / 30, 2) if available > monthly_saving else 0
+            "with_cap": calculate(True),
+            "without_cap": calculate(False)
         }
 
     # ----------------- Вспомогательные методы -----------------
@@ -163,18 +203,3 @@ class FinanceCalculator:
             return value_type(value)
         except ValueError:
             return None
-
-
-# Пример использования (можно удалить в рабочей версии)
-if __name__ == "__main__":
-    print("\nТест кредитного калькулятора (аннуитет):")
-    print(FinanceCalculator.calculate_loan(1_000_000, 12, 60))
-
-    print("\nТест вклада (с капитализацией):")
-    print(FinanceCalculator.calculate_deposit(100_000, 8, 12))
-
-    print("\nТест накоплений:")
-    print(FinanceCalculator.calculate_savings(50_000, 10_000, 5, 6))
-
-    print("\nТест бюджета:")
-    print(FinanceCalculator.calculate_budget(100_000, 60_000, 240_000, 6))
